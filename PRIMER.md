@@ -1,10 +1,10 @@
-# Codemark: LLM Reference
+# Sigil: LLM Reference
 
 ## What it is
 
-Codemark is a CLI tool for bookmarking code locations with human-written descriptions and tags. Think of it as a curated index of "places that matter" in a codebase, annotated with intent and context that grep and IDE search can't provide.
+Sigil is a CLI tool for bookmarking code locations with human-written descriptions and tags. Think of it as a curated index of "places that matter" in a codebase, annotated with intent and context that grep and IDE search can't provide.
 
-When a `.codemark/` directory is present in a repository, it contains a navigable map of important code locations maintained by the developer.
+When a `.sigil/` directory is present in a repository, it contains a navigable map of important code locations maintained by the developer.
 
 ## Why it matters to you
 
@@ -13,7 +13,7 @@ Bookmarks tell you **what the developer cares about and why**. A bookmark isn't 
 ## Storage format
 
 ```
-.codemark/
+.sigil/
   bookmarks.jsonl          # one JSON object per line, metadata only
   contexts/
     bm_1709123456_a3f5.ctx # raw code context, no escaping
@@ -44,19 +44,19 @@ Lines above and below the `>>>` marker are surrounding context for orientation a
 ## CLI commands
 
 ```bash
-codemark init                                    # initialize in current repo
-codemark add <file>:<line> -t tag1,tag2 -d "..." # create bookmark
-codemark list [-t tags] [-f file] [--stale]      # list/filter bookmarks
-codemark list --json                             # JSON output for programmatic use
-codemark show <id>                               # detailed view with context
-codemark delete <id>                             # remove bookmark
-codemark delete -t <tags>                        # bulk remove by tag
-codemark validate                                # check all bookmarks against source
-codemark validate --fix                          # auto-update shifted line numbers
-codemark search <query>                          # search descriptions, tags, files
+sigil init                                    # initialize in current repo
+sigil add <file>:<line> -t tag1,tag2 -d "..." # create bookmark
+sigil list [-t tags] [-f file] [--stale]      # list/filter bookmarks
+sigil list --json                             # JSON output for programmatic use
+sigil show <id>                               # detailed view with context
+sigil delete <id>                             # remove bookmark
+sigil delete -t <tags>                        # bulk remove by tag
+sigil validate                                # check all bookmarks against source
+sigil validate --fix                          # auto-update shifted line numbers
+sigil search <query>                          # search descriptions, tags, files
 ```
 
-Partial IDs work for show/delete (e.g. `codemark show a3f5`).
+Partial IDs work for show/delete (e.g. `sigil show a3f5`).
 
 ## Validation statuses
 
@@ -69,11 +69,11 @@ Partial IDs work for show/delete (e.g. `codemark show a3f5`).
 
 ### When reading a codebase
 
-Start with `codemark list --json` or read `.codemark/bookmarks.jsonl` directly. This gives you the developer's mental map — the places they've marked as important, buggy, fragile, or worth understanding. Use descriptions and tags to orient yourself before diving into source.
+Start with `sigil list --json` or read `.sigil/bookmarks.jsonl` directly. This gives you the developer's mental map — the places they've marked as important, buggy, fragile, or worth understanding. Use descriptions and tags to orient yourself before diving into source.
 
 ### When making changes
 
-After modifying code, run `codemark validate` to see which bookmarks were affected. If you shifted code, `codemark validate --fix` will auto-update line numbers. If you fundamentally changed bookmarked code, update or remove the stale bookmarks.
+After modifying code, run `sigil validate` to see which bookmarks were affected. If you shifted code, `sigil validate --fix` will auto-update line numbers. If you fundamentally changed bookmarked code, update or remove the stale bookmarks.
 
 ### When creating bookmarks
 
@@ -81,4 +81,4 @@ Write descriptions as if explaining to a colleague why this location matters. In
 
 ### When maintaining bookmarks
 
-After refactoring, run `codemark validate --fix` and review any stale bookmarks. Either update them to point at the new relevant code, or delete them if the concern no longer applies. Bookmark maintenance is a good post-refactor checklist item.
+After refactoring, run `sigil validate --fix` and review any stale bookmarks. Either update them to point at the new relevant code, or delete them if the concern no longer applies. Bookmark maintenance is a good post-refactor checklist item.

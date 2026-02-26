@@ -11,7 +11,7 @@ import time
 class Context:
     before: str  # line above target
     target: str  # the bookmarked line
-    after: str   # line below target
+    after: str  # line below target
 
     def to_dict(self) -> dict:
         return asdict(self)

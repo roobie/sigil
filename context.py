@@ -6,14 +6,14 @@ from .models import Context
 
 def extract_context(filepath: Path, line_number: int) -> Context:
     """Extract target line and surrounding context from a file.
-    
+
     Args:
         filepath: Path to the source file
         line_number: 1-based line number to bookmark
-        
+
     Returns:
         Context with before, target, and after lines
-        
+
     Raises:
         FileNotFoundError: If file doesn't exist
         ValueError: If line number is out of range

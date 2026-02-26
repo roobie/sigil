@@ -26,6 +26,9 @@ def main():
 
     sub = parser.add_subparsers(dest="command")
 
+    # --- primer ---
+    sub.add_parser("primer", help="Prints the PRIMER.md")
+
     # --- init ---
     sub.add_parser("init", help="Initialize sigil in current directory")
 
@@ -39,8 +42,12 @@ def main():
     p_list = sub.add_parser("list", aliases=["ls"], help="List bookmarks")
     p_list.add_argument("-t", "--tags", help="Filter by tags (comma-separated)")
     p_list.add_argument("-f", "--file", help="Filter by file pattern")
-    p_list.add_argument("--stale", action="store_true", help="Show only stale bookmarks")
-    p_list.add_argument("--json", action="store_true", dest="as_json", help="Output as JSON")
+    p_list.add_argument(
+        "--stale", action="store_true", help="Show only stale bookmarks"
+    )
+    p_list.add_argument(
+        "--json", action="store_true", dest="as_json", help="Output as JSON"
+    )
 
     # --- show ---
     p_show = sub.add_parser("show", help="Show bookmark details")
@@ -76,6 +83,7 @@ def main():
         "rm": cmd_delete,
         "validate": cmd_validate,
         "search": cmd_search,
+        "primer": cmd_primer,
     }
 
     fn = commands.get(args.command)
@@ -88,6 +96,14 @@ def main():
 
 
 # ---------- Commands ----------
+#
+
+
+def cmd_primer(args):
+    script_dir = Path(__file__).resolve().parent
+    with open(script_dir / "PRIMER.md") as f:
+        primer = f.read()
+    print(primer)
 
 
 def cmd_init(args):
@@ -101,7 +117,9 @@ def cmd_add(args):
 
     # Parse file:line
     if ":" not in args.location:
-        print("Error: Location must be file:line (e.g. src/main.py:42)", file=sys.stderr)
+        print(
+            "Error: Location must be file:line (e.g. src/main.py:42)", file=sys.stderr
+        )
         sys.exit(1)
 
     parts = args.location.rsplit(":", 1)
@@ -163,7 +181,9 @@ def cmd_list(args):
         bookmarks = [b for b in bookmarks if pattern in b.file]
 
     if args.stale:
-        bookmarks = [b for b in bookmarks if b.validation.status in ("stale", "missing_file")]
+        bookmarks = [
+            b for b in bookmarks if b.validation.status in ("stale", "missing_file")
+        ]
 
     if not bookmarks:
         print("No bookmarks found.")
@@ -171,6 +191,7 @@ def cmd_list(args):
 
     if args.as_json:
         import json
+
         print(json.dumps([b.to_dict() for b in bookmarks], indent=2))
         return
 
@@ -261,7 +282,9 @@ def cmd_validate(args):
         print(f"  {icon} {status}: {len(group)}")
         for r in group:
             if r.message and r.new_status != "valid":
-                print(f"    {r.bookmark.short_id} {r.bookmark.file}:{r.bookmark.line} — {r.message}")
+                print(
+                    f"    {r.bookmark.short_id} {r.bookmark.file}:{r.bookmark.line} — {r.message}"
+                )
             elif r.new_status != "valid":
                 print(f"    {r.bookmark.short_id} {r.bookmark.file}:{r.bookmark.line}")
 
@@ -277,12 +300,14 @@ def cmd_search(args):
 
     matches = []
     for bm in bookmarks:
-        searchable = " ".join([
-            bm.metadata.description,
-            " ".join(bm.metadata.tags),
-            bm.file,
-            bm.context.target,
-        ]).lower()
+        searchable = " ".join(
+            [
+                bm.metadata.description,
+                " ".join(bm.metadata.tags),
+                bm.file,
+                bm.context.target,
+            ]
+        ).lower()
         if query in searchable:
             matches.append(bm)
 
@@ -334,14 +359,16 @@ def _print_table(bookmarks: list[Bookmark]):
         desc = bm.metadata.description
         if len(desc) > 45:
             desc = desc[:42] + "..."
-        rows.append((
-            bm.short_id,
-            bm.file,
-            str(bm.line),
-            ",".join(bm.metadata.tags) if bm.metadata.tags else "",
-            desc,
-            bm.validation.status,
-        ))
+        rows.append(
+            (
+                bm.short_id,
+                bm.file,
+                str(bm.line),
+                ",".join(bm.metadata.tags) if bm.metadata.tags else "",
+                desc,
+                bm.validation.status,
+            )
+        )
 
     headers = ("ID", "FILE", "LINE", "TAGS", "DESCRIPTION", "STATUS")
     widths = [len(h) for h in headers]
@@ -359,7 +386,7 @@ def _print_table(bookmarks: list[Bookmark]):
     print(fmt.format(*("─" * w for w in widths)))
     for row in rows:
         truncated = tuple(
-            val[:widths[i]] if len(val) > widths[i] else val
+            val[: widths[i]] if len(val) > widths[i] else val
             for i, val in enumerate(row)
         )
         print(fmt.format(*truncated))

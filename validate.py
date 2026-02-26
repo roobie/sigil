@@ -19,7 +19,7 @@ class ValidationResult:
 
 def validate_bookmark(bookmark: Bookmark, root: Path) -> ValidationResult:
     """Validate a single bookmark against its source file.
-    
+
     Strategy:
     1. Check exact line match
     2. Search nearby (±10 lines)

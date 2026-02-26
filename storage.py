@@ -14,7 +14,7 @@ from typing import Optional
 
 from .models import Bookmark, Context, Metadata, Validation
 
-CODEMARK_DIR = ".sigil"
+SIGIL_DIR = ".sigil"
 BOOKMARKS_FILE = "bookmarks.jsonl"
 CONTEXTS_DIR = "contexts"
 
@@ -29,7 +29,7 @@ def find_root(start: Optional[Path] = None) -> Optional[Path]:
     # First pass: look for .sigil/
     check = current
     while True:
-        if (check / CODEMARK_DIR).is_dir():
+        if (check / SIGIL_DIR).is_dir():
             return check
         if check.parent == check:
             break
@@ -49,7 +49,7 @@ def find_root(start: Optional[Path] = None) -> Optional[Path]:
 
 def ensure_storage(root: Path) -> Path:
     """Ensure .sigil directory structure exists. Returns path to .sigil/."""
-    sigil_dir = root / CODEMARK_DIR
+    sigil_dir = root / SIGIL_DIR
     sigil_dir.mkdir(exist_ok=True)
     (sigil_dir / CONTEXTS_DIR).mkdir(exist_ok=True)
 
@@ -138,7 +138,7 @@ def _load_context(contexts_dir: Path, bookmark_id: str) -> Context:
 
     for i, line in enumerate(lines):
         if line.startswith(CONTEXT_TARGET_MARKER):
-            target = line[len(CONTEXT_TARGET_MARKER):]
+            target = line[len(CONTEXT_TARGET_MARKER) :]
             target_idx = i
             break
 
