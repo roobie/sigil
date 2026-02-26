@@ -1,4 +1,4 @@
-"""Allow running as: python -m codemark"""
+"""Allow running as: python -m sigil"""
 from .cli import main
 
 main()

@@ -19,6 +19,6 @@ script_dir = Path(__file__).resolve().parent.parent
 if str(script_dir) not in sys.path:
     sys.path.insert(0, str(script_dir))
 
-from sigil.cli import main  # type: ignore # noqa: E402
+from codemark.cli import main  # type: ignore # noqa: E402
 
 main()

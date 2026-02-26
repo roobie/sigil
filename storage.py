@@ -1,7 +1,7 @@
-"""JSONL + context file storage for codemark bookmarks.
+"""JSONL + context file storage for sigil bookmarks.
 
 Storage layout:
-  .codemark/
+  .sigil/
     bookmarks.jsonl          # one JSON object per line (metadata only)
     contexts/
       bm_1709123456_a3f5.ctx # raw context lines, no escaping
@@ -14,7 +14,7 @@ from typing import Optional
 
 from .models import Bookmark, Context, Metadata, Validation
 
-CODEMARK_DIR = ".codemark"
+CODEMARK_DIR = ".sigil"
 BOOKMARKS_FILE = "bookmarks.jsonl"
 CONTEXTS_DIR = "contexts"
 
@@ -23,10 +23,10 @@ CONTEXT_TARGET_MARKER = ">>> "
 
 
 def find_root(start: Optional[Path] = None) -> Optional[Path]:
-    """Walk up from start directory to find a .codemark/ or .git/ directory."""
+    """Walk up from start directory to find a .sigil/ or .git/ directory."""
     current = (start or Path.cwd()).resolve()
 
-    # First pass: look for .codemark/
+    # First pass: look for .sigil/
     check = current
     while True:
         if (check / CODEMARK_DIR).is_dir():
@@ -48,22 +48,22 @@ def find_root(start: Optional[Path] = None) -> Optional[Path]:
 
 
 def ensure_storage(root: Path) -> Path:
-    """Ensure .codemark directory structure exists. Returns path to .codemark/."""
-    codemark_dir = root / CODEMARK_DIR
-    codemark_dir.mkdir(exist_ok=True)
-    (codemark_dir / CONTEXTS_DIR).mkdir(exist_ok=True)
+    """Ensure .sigil directory structure exists. Returns path to .sigil/."""
+    sigil_dir = root / CODEMARK_DIR
+    sigil_dir.mkdir(exist_ok=True)
+    (sigil_dir / CONTEXTS_DIR).mkdir(exist_ok=True)
 
-    bookmarks_path = codemark_dir / BOOKMARKS_FILE
+    bookmarks_path = sigil_dir / BOOKMARKS_FILE
     if not bookmarks_path.exists():
         bookmarks_path.write_text("")
 
-    return codemark_dir
+    return sigil_dir
 
 
-def load_bookmarks(codemark_dir: Path) -> list[Bookmark]:
+def load_bookmarks(sigil_dir: Path) -> list[Bookmark]:
     """Load all bookmarks from JSONL + context files."""
-    bookmarks_path = codemark_dir / BOOKMARKS_FILE
-    contexts_dir = codemark_dir / CONTEXTS_DIR
+    bookmarks_path = sigil_dir / BOOKMARKS_FILE
+    contexts_dir = sigil_dir / CONTEXTS_DIR
 
     bookmarks = []
     for line in bookmarks_path.read_text().splitlines():
@@ -77,10 +77,10 @@ def load_bookmarks(codemark_dir: Path) -> list[Bookmark]:
     return bookmarks
 
 
-def save_bookmarks(codemark_dir: Path, bookmarks: list[Bookmark]) -> None:
+def save_bookmarks(sigil_dir: Path, bookmarks: list[Bookmark]) -> None:
     """Save all bookmarks to JSONL + context files."""
-    bookmarks_path = codemark_dir / BOOKMARKS_FILE
-    contexts_dir = codemark_dir / CONTEXTS_DIR
+    bookmarks_path = sigil_dir / BOOKMARKS_FILE
+    contexts_dir = sigil_dir / CONTEXTS_DIR
 
     # Write JSONL (atomic-ish)
     lines = [json.dumps(_to_jsonl(bm), separators=(",", ":")) for bm in bookmarks]

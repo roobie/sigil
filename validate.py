@@ -1,4 +1,4 @@
-"""Validation logic for codemark bookmarks."""
+"""Validation logic for sigil bookmarks."""
 
 from dataclasses import dataclass
 from pathlib import Path

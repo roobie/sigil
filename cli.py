@@ -1,4 +1,4 @@
-"""CLI interface for codemark."""
+"""CLI interface for sigil."""
 
 import argparse
 import sys
@@ -19,15 +19,15 @@ from .validate import validate_bookmark, apply_result
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="codemark",
+        prog="sigil",
         description="Bookmark code locations with context-aware validation.",
     )
-    parser.add_argument("--version", action="version", version=f"codemark {__version__}")
+    parser.add_argument("--version", action="version", version=f"sigil {__version__}")
 
     sub = parser.add_subparsers(dest="command")
 
     # --- init ---
-    sub.add_parser("init", help="Initialize codemark in current directory")
+    sub.add_parser("init", help="Initialize sigil in current directory")
 
     # --- add ---
     p_add = sub.add_parser("add", help="Add a bookmark")
@@ -92,12 +92,12 @@ def main():
 
 def cmd_init(args):
     root = Path.cwd()
-    codemark_dir = ensure_storage(root)
-    print(f"Initialized codemark in {codemark_dir}")
+    sigil_dir = ensure_storage(root)
+    print(f"Initialized sigil in {sigil_dir}")
 
 
 def cmd_add(args):
-    root, codemark_dir, bookmarks = _load()
+    root, sigil_dir, bookmarks = _load()
 
     # Parse file:line
     if ":" not in args.location:
@@ -140,7 +140,7 @@ def cmd_add(args):
     )
 
     bookmarks.append(bookmark)
-    save_bookmarks(codemark_dir, bookmarks)
+    save_bookmarks(sigil_dir, bookmarks)
 
     print(f"Added bookmark {bookmark.short_id} → {rel_path}:{line}")
     if tags:
@@ -151,7 +151,7 @@ def cmd_add(args):
 
 
 def cmd_list(args):
-    root, codemark_dir, bookmarks = _load()
+    root, sigil_dir, bookmarks = _load()
 
     # Filter
     if args.tags:
@@ -179,12 +179,12 @@ def cmd_list(args):
 
 
 def cmd_show(args):
-    root, codemark_dir, bookmarks = _load()
+    root, sigil_dir, bookmarks = _load()
     bm = _find_bookmark(bookmarks, args.id)
 
     # Update accessed time
     bm.metadata.accessed = now_iso()
-    save_bookmarks(codemark_dir, bookmarks)
+    save_bookmarks(sigil_dir, bookmarks)
 
     print(f"Bookmark: {bm.id}")
     print(f"File: {bm.file}:{bm.line}")
@@ -203,12 +203,12 @@ def cmd_show(args):
 
 
 def cmd_delete(args):
-    root, codemark_dir, bookmarks = _load()
+    root, sigil_dir, bookmarks = _load()
 
     if args.id:
         bm = _find_bookmark(bookmarks, args.id)
         bookmarks.remove(bm)
-        save_bookmarks(codemark_dir, bookmarks)
+        save_bookmarks(sigil_dir, bookmarks)
         print(f"Deleted bookmark {bm.short_id} ({bm.file}:{bm.line})")
 
     elif args.tags:
@@ -221,7 +221,7 @@ def cmd_delete(args):
         for bm in to_delete:
             print(f"  {bm.short_id} → {bm.file}:{bm.line}")
             bookmarks.remove(bm)
-        save_bookmarks(codemark_dir, bookmarks)
+        save_bookmarks(sigil_dir, bookmarks)
 
     else:
         print("Error: Specify a bookmark ID or --tags to delete.", file=sys.stderr)
@@ -229,7 +229,7 @@ def cmd_delete(args):
 
 
 def cmd_validate(args):
-    root, codemark_dir, bookmarks = _load()
+    root, sigil_dir, bookmarks = _load()
 
     if not bookmarks:
         print("No bookmarks to validate.")
@@ -241,7 +241,7 @@ def cmd_validate(args):
         changed = apply_result(result, fix=args.fix)
         results.append(result)
 
-    save_bookmarks(codemark_dir, bookmarks)
+    save_bookmarks(sigil_dir, bookmarks)
 
     # Summary
     by_status = {}
@@ -272,7 +272,7 @@ def cmd_validate(args):
 
 
 def cmd_search(args):
-    root, codemark_dir, bookmarks = _load()
+    root, sigil_dir, bookmarks = _load()
     query = args.query.lower()
 
     matches = []
@@ -297,19 +297,19 @@ def cmd_search(args):
 
 
 def _load() -> tuple:
-    """Find root, ensure storage, load bookmarks. Returns (root, codemark_dir, bookmarks)."""
+    """Find root, ensure storage, load bookmarks. Returns (root, sigil_dir, bookmarks)."""
     root = find_root()
     if root is None:
         print(
-            "Error: Not in a codemark project. Run 'codemark init' first, "
-            "or navigate to a directory with .codemark/ or .git/",
+            "Error: Not in a sigil project. Run 'sigil init' first, "
+            "or navigate to a directory with .sigil/ or .git/",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    codemark_dir = ensure_storage(root)
-    bookmarks = load_bookmarks(codemark_dir)
-    return root, codemark_dir, bookmarks
+    sigil_dir = ensure_storage(root)
+    bookmarks = load_bookmarks(sigil_dir)
+    return root, sigil_dir, bookmarks
 
 
 def _find_bookmark(bookmarks: list[Bookmark], partial_id: str) -> Bookmark:

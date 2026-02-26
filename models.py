@@ -1,4 +1,4 @@
-"""Data models for codemark bookmarks."""
+"""Data models for sigil bookmarks."""
 
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
