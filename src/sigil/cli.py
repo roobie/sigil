@@ -27,7 +27,10 @@ def main():
     sub = parser.add_subparsers(dest="command")
 
     # --- primer ---
-    sub.add_parser("primer", help="Prints the PRIMER.md (do this as part of discovery on how to use this tool)")
+    sub.add_parser(
+        "primer",
+        help="Prints the PRIMER.md (do this as part of discovery on how to use this tool)",
+    )
 
     # --- init ---
     sub.add_parser("init", help="Initialize sigil in current directory")
