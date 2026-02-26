@@ -69,6 +69,14 @@ def main():
     p_search = sub.add_parser("search", help="Search bookmarks")
     p_search.add_argument("query", help="Search term")
 
+    # --- move ---
+    p_move = sub.add_parser("move", help="Reposition a bookmark")
+    p_move.add_argument("id", help="Bookmark ID (or partial match)")
+    p_move.add_argument(
+        "target",
+        help="New position: +N (relative), -N (relative), N (absolute), or file:line",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -86,6 +94,7 @@ def main():
         "rm": cmd_delete,
         "validate": cmd_validate,
         "search": cmd_search,
+        "move": cmd_move,
         "primer": cmd_primer,
     }
 
@@ -319,6 +328,57 @@ def cmd_search(args):
         return
 
     _print_table(matches)
+
+
+def cmd_move(args):
+    root, sigil_dir, bookmarks = _load()
+    bm = _find_bookmark(bookmarks, args.id)
+    target = args.target
+
+    # Determine new file and line
+    if target.startswith(("+", "-")) and target[1:].isdigit():
+        # Relative: +N or -N
+        delta = int(target)
+        new_file = bm.file
+        new_line = bm.line + delta
+    elif ":" in target:
+        # File relocation: file:line
+        parts = target.rsplit(":", 1)
+        filepath = Path(parts[0])
+        try:
+            new_line = int(parts[1])
+        except ValueError:
+            print(f"Error: Invalid line in target '{target}'", file=sys.stderr)
+            sys.exit(1)
+        if not filepath.is_absolute():
+            filepath = Path.cwd() / filepath
+        new_file = get_relative_path(filepath, root)
+    else:
+        # Absolute line in same file
+        try:
+            new_line = int(target)
+        except ValueError:
+            print(f"Error: Cannot parse target '{target}'", file=sys.stderr)
+            sys.exit(1)
+        new_file = bm.file
+
+    if new_line < 1:
+        print(f"Error: Line number must be >= 1 (got {new_line})", file=sys.stderr)
+        sys.exit(1)
+
+    actual_path = root / new_file if not Path(new_file).is_absolute() else Path(new_file)
+    new_context = extract_context(actual_path, new_line)
+
+    old_location = f"{bm.file}:{bm.line}"
+    bm.file = new_file
+    bm.line = new_line
+    bm.context = new_context
+    bm.validation.status = "valid"
+    bm.validation.last_checked = now_iso()
+
+    save_bookmarks(sigil_dir, bookmarks)
+    print(f"Moved {bm.short_id}: {old_location} → {new_file}:{new_line}")
+    print(f"  Context: {new_context.target.strip()}")
 
 
 # ---------- Helpers ----------
