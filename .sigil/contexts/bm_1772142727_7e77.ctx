@@ -1,0 +1,3 @@
+        # --- add ---
+>>>     p_add = sub.add_parser("add", help="Add a bookmark")
+        p_add.add_argument("location", help="file:line (e.g. src/main.py:42)")

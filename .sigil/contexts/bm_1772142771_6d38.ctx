@@ -1,0 +1,3 @@
+            lines.append(f"    {context.before}")
+>>>     lines.append(f"{CONTEXT_TARGET_MARKER}{context.target}")
+        if context.after:

@@ -1,0 +1,3 @@
+    sigil validate                                # check all bookmarks against source
+>>> sigil validate --fix                          # auto-update shifted line numbers
+    sigil search <query>                          # search descriptions, tags, files

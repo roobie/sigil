@@ -1,12 +1,28 @@
-[build-system]
-requires = ["setuptools>=64"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "sigil"
 version = "0.1.0"
+readme = "README.md"
 description = "Bookmark code locations with context-aware validation"
 requires-python = ">=3.10"
+dependencies = []
 
 [project.scripts]
-codemark = "sigil.cli:main"
+sg = "sigil.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sigil"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=7.0",
+    "pytest-xdist>=3.8",
+    "ruff>=0.15.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,2 @@
+>>> def ensure_storage(root: Path) -> Path:
+        """Ensure .sigil directory structure exists. Returns path to .sigil/."""

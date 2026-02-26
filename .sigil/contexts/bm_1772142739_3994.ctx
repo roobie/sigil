@@ -1,0 +1,2 @@
+>>> def cmd_add(args):
+        root, sigil_dir, bookmarks = _load()

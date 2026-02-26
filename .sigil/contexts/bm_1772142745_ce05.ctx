@@ -1,0 +1,3 @@
+        """
+>>>     if not filepath.exists():
+            raise FileNotFoundError(f"File not found: {filepath}")

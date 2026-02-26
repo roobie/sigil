@@ -1,0 +1,2 @@
+>>> def _print_table(bookmarks: list[Bookmark]):
+        """Print bookmarks as a formatted table."""

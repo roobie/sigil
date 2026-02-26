@@ -1,0 +1,2 @@
+>>> def get_relative_path(filepath: Path, root: Path) -> str:
+        """Get path relative to repository root."""
