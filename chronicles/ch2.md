@@ -2,7 +2,7 @@
 
 ## Starting Point
 
-Arrived with a thorough design spec — the product of an earlier conversation that had gone through the full vision → reality check → scope cut cycle. The spec called for a Rust CLI tool called `codemark` with JSON storage, context-based validation, and a VS Code extension. Timeline estimated at 6-8 weeks.
+Arrived with a thorough design spec — the product of an earlier conversation that had gone through the full vision → reality check → scope cut cycle. The spec called for a Rust CLI tool called `sigil` with JSON storage, context-based validation, and a VS Code extension. Timeline estimated at 6-8 weeks.
 
 ## Motivations Clarified
 
@@ -49,20 +49,20 @@ This gives the best of both worlds: structured metadata in a format everything c
 
 ## Ergonomics Fix
 
-The `python -m codemark` invocation requires CWD to be the package's parent directory. Added a standalone launcher script (`cm`) that resolves its own location to find the package. Works from any directory. Three install options: symlink on PATH, shell alias, or pip install.
+The `python -m sigil` invocation requires CWD to be the package's parent directory. Added a standalone launcher script (`cm`) that resolves its own location to find the package. Works from any directory. Three install options: symlink on PATH, shell alias, or pip install.
 
 ## LLM Primer
 
-Wrote a compact reference document designed to be dropped into system prompts or included alongside a codebase. Covers: what codemark is, the storage format, all CLI commands, validation statuses, and — critically — instructions for how an LLM should use bookmarks when reading, modifying, or maintaining a codebase.
+Wrote a compact reference document designed to be dropped into system prompts or included alongside a codebase. Covers: what sigil is, the storage format, all CLI commands, validation statuses, and — critically — instructions for how an LLM should use bookmarks when reading, modifying, or maintaining a codebase.
 
 ## Current State
 
 A working MVP with six files and zero dependencies:
 
 ```
-codemark/
+sigil/
   __init__.py    # version
-  __main__.py    # python -m codemark
+  __main__.py    # python -m sigil
   cli.py         # argument parsing + command dispatch
   models.py      # Bookmark, Context, Metadata, Validation dataclasses
   storage.py     # JSONL + .ctx file I/O
@@ -80,6 +80,6 @@ Not yet built, roughly in priority order:
 
 - **goto** command (open in $EDITOR)
 - **Interactive fuzzy finder** (the "wow" feature)
-- **LLM workflow testing** — pipe `codemark list --json` plus relevant `.ctx` files to a model with a diff, see how well it maintains bookmarks
+- **LLM workflow testing** — pipe `sigil list --json` plus relevant `.ctx` files to a model with a diff, see how well it maintains bookmarks
 - **Git hook integration** — auto-validate on commit or checkout
 - **Rust rewrite** — once the Python prototype has been used on a real codebase long enough to stabilize the design

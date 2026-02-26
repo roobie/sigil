@@ -5,9 +5,9 @@ Automatically finds the sigil package relative to this script,
 so it works from any working directory.
 
 Setup (pick one):
-  1. Symlink:  ln -s /path/to/sigil/cm ~/.local/bin/sigil
+  1. Symlink:  ln -s /path/to/sigil/sg ~/.local/bin/sigil
   2. Copy:     cp cm ~/.local/bin/sigil && chmod +x ~/.local/bin/sigil
-  3. Alias:    alias sigil='python3 /path/to/sigil/cm'
+  3. Alias:    alias sigil='python3 /path/to/sigil/sg'
 """
 
 import sys

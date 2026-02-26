@@ -67,7 +67,7 @@ This approach lets us ship something useful in weeks, not months, and learn what
 
 ## Overview
 
-**Name**: `codemark` (or similar)
+**Name**: `sigil` (or similar)
 
 **Purpose**: A standalone CLI tool for bookmarking code locations with metadata, stored in a VCS-friendly format, with optional editor integration.
 
@@ -126,7 +126,7 @@ This approach lets us ship something useful in weeks, not months, and learn what
 
 ### Storage Format
 
-**File location**: `.codemark/bookmarks.json` in repository root (or `~/.codemark/global.json` for global bookmarks)
+**File location**: `.sigil/bookmarks.json` in repository root (or `~/.sigil/global.json` for global bookmarks)
 
 **Structure**:
 ```json
@@ -157,42 +157,42 @@ This approach lets us ship something useful in weeks, not months, and learn what
 
 ```bash
 # Create a bookmark
-codemark add <file>:<line> [--tags tag1,tag2] [--desc "description"]
-codemark add src/main.rs:42 --tags bug,urgent --desc "Memory leak here"
+sigil add <file>:<line> [--tags tag1,tag2] [--desc "description"]
+sigil add src/main.rs:42 --tags bug,urgent --desc "Memory leak here"
 
 # List bookmarks
-codemark list [--tags tag1,tag2] [--file pattern] [--stale]
-codemark list --tags bug
-codemark list --file "src/parser.*"
-codemark list --stale  # Show only potentially stale bookmarks
+sigil list [--tags tag1,tag2] [--file pattern] [--stale]
+sigil list --tags bug
+sigil list --file "src/parser.*"
+sigil list --stale  # Show only potentially stale bookmarks
 
 # Show bookmark details
-codemark show <id>
-codemark show bm_1709123456_a3f5
+sigil show <id>
+sigil show bm_1709123456_a3f5
 
 # Navigate to bookmark (opens in $EDITOR or configured editor)
-codemark goto <id>
-codemark goto bm_1709123456_a3f5
+sigil goto <id>
+sigil goto bm_1709123456_a3f5
 
 # Update bookmark (change tags, description, or line number)
-codemark update <id> [--line N] [--tags tag1,tag2] [--desc "new description"]
+sigil update <id> [--line N] [--tags tag1,tag2] [--desc "new description"]
 
 # Delete bookmark
-codemark delete <id>
-codemark delete --tags old  # Delete all bookmarks with tag "old"
+sigil delete <id>
+sigil delete --tags old  # Delete all bookmarks with tag "old"
 
 # Validate all bookmarks
-codemark validate [--fix]  # --fix attempts to auto-update line numbers
+sigil validate [--fix]  # --fix attempts to auto-update line numbers
 
 # Search bookmark descriptions and tags
-codemark search "memory leak"
+sigil search "memory leak"
 
 # Export/import
-codemark export bookmarks.json
-codemark import bookmarks.json
+sigil export bookmarks.json
+sigil import bookmarks.json
 
 # Interactive mode (fuzzy finder for navigation)
-codemark interactive  # or just: codemark
+sigil interactive  # or just: sigil
 ```
 
 ### Output Format
@@ -244,11 +244,11 @@ When validating a bookmark:
 4. **Stale handling**: When marked `stale`:
    - Store original context for reference
    - Don't auto-delete (user might want to review)
-   - Show in `codemark list --stale`
+   - Show in `sigil list --stale`
 
 ### Auto-fix Mode
 
-With `codemark validate --fix`:
+With `sigil validate --fix`:
 - Automatically update line numbers for `valid` and `moved` bookmarks
 - Leave `stale` bookmarks unchanged (require manual review)
 - Print summary of changes
@@ -269,7 +269,7 @@ With `codemark validate --fix`:
 **Core functionality**:
 - **Gutter icons**: Show bookmark indicators in editor gutter
 - **Hover tooltips**: Display bookmark description on hover
-- **Command palette**: Access all codemark commands
+- **Command palette**: Access all sigil commands
 - **Sidebar panel**: List all bookmarks with filtering
 - **Keybindings**: Quick bookmark creation and navigation
 
@@ -280,9 +280,9 @@ With `codemark validate --fix`:
 - `Codemark: Validate All` - Check bookmark status
 
 **Implementation approach**:
-- Extension reads `.codemark/bookmarks.json` on activation
+- Extension reads `.sigil/bookmarks.json` on activation
 - Watches file for external changes (CLI usage)
-- Invokes `codemark` CLI for all operations
+- Invokes `sigil` CLI for all operations
 - Decorates editor based on bookmark data
 
 ---
@@ -321,7 +321,7 @@ With `codemark validate --fix`:
 ## File Structure
 
 ```
-codemark/
+sigil/
 ├── cli/
 │   ├── src/
 │   │   ├── main.rs           # CLI entry point
@@ -367,7 +367,7 @@ codemark/
 - [ ] Commands: add, list, show, delete
 - [ ] Basic context extraction
 - [ ] Simple validation (exact line match only)
-- [ ] Repository detection (find `.codemark/` directory)
+- [ ] Repository detection (find `.sigil/` directory)
 
 ### Phase 2: Enhanced Validation (Week 2-3)
 - [ ] Fuzzy context matching (nearby and file-wide search)
@@ -402,7 +402,7 @@ codemark/
 
 ## Configuration
 
-**Location**: `.codemark/config.json` (repository-specific) or `~/.codemark/config.json` (global)
+**Location**: `.sigil/config.json` (repository-specific) or `~/.sigil/config.json` (global)
 
 ```json
 {
@@ -467,7 +467,7 @@ codemark/
 ### Usage Metrics
 - User creates 5+ bookmarks in first week (tool is useful)
 - User accesses bookmarks 10+ times per week (tool is used regularly)
-- User shares `.codemark/` directory in version control (tool is trusted)
+- User shares `.sigil/` directory in version control (tool is trusted)
 
 ### Feedback Metrics
 - Users report which features they miss most (guides Phase 2 development)
@@ -666,7 +666,7 @@ codemark/
 
 **Distribution channels**:
 - **GitHub Releases**: Pre-built binaries for Linux, macOS, Windows
-- **Cargo**: `cargo install codemark` for Rust users
+- **Cargo**: `cargo install sigil` for Rust users
 - **Homebrew**: Formula for macOS users (after initial release)
 - **Apt/Yum**: Packages for Linux distributions (future)
 
