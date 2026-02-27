@@ -20,7 +20,7 @@ from .validate import validate_bookmark, apply_result
 def main():
     parser = argparse.ArgumentParser(
         prog="sigil",
-        description="Bookmark code locations with context-aware validation.",
+        description="Bookmark code locations with context-aware validation. Invoke `sg primer` for a crash course in how to use.",
     )
     parser.add_argument("--version", action="version", version=f"sigil {__version__}")
 
