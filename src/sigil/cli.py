@@ -79,6 +79,9 @@ def main():
 
     args = parser.parse_args()
 
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
     if not args.command:
         parser.print_help()
         return

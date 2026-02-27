@@ -1,6 +1,6 @@
 [project]
 name = "sigil"
-version = "0.2.0"
+version = "0.3.0"
 readme = "README.md"
 description = "Bookmark code locations with context-aware validation"
 requires-python = ">=3.10"
