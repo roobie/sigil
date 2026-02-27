@@ -1,0 +1,69 @@
+{
+  "name": "sigil",
+  "displayName": "Sigil — Code Bookmarks",
+  "description": "Display and manage sigil code bookmarks with gutter indicators, navigation, and a sidebar panel.",
+  "version": "0.1.0",
+  "publisher": "you",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "workspaceContains:.sigil/bookmarks.jsonl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "sigil.addBookmark", "title": "Sigil: Add Bookmark Here" },
+      { "command": "sigil.deleteBookmark", "title": "Sigil: Delete Bookmark at Cursor" },
+      { "command": "sigil.nextBookmark", "title": "Sigil: Next Bookmark" },
+      { "command": "sigil.prevBookmark", "title": "Sigil: Previous Bookmark" },
+      { "command": "sigil.validate", "title": "Sigil: Validate All" },
+      { "command": "sigil.refresh", "title": "Sigil: Refresh" },
+      { "command": "sigil.gotoBookmark", "title": "Sigil: Go to Bookmark…" }
+    ],
+    "keybindings": [
+      { "command": "sigil.addBookmark", "key": "ctrl+shift+s a", "mac": "cmd+shift+s a", "when": "editorTextFocus" },
+      { "command": "sigil.deleteBookmark", "key": "ctrl+shift+s d", "mac": "cmd+shift+s d", "when": "editorTextFocus" },
+      { "command": "sigil.nextBookmark", "key": "ctrl+shift+s n", "mac": "cmd+shift+s n", "when": "editorTextFocus" },
+      { "command": "sigil.prevBookmark", "key": "ctrl+shift+s p", "mac": "cmd+shift+s p", "when": "editorTextFocus" },
+      { "command": "sigil.gotoBookmark", "key": "ctrl+shift+s g", "mac": "cmd+shift+s g" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sigil",
+          "title": "Sigil",
+          "icon": "$(bookmark)"
+        }
+      ]
+    },
+    "views": {
+      "sigil": [
+        {
+          "id": "sigilBookmarks",
+          "name": "Bookmarks"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Sigil",
+      "properties": {
+        "sigil.command": {
+          "type": "string",
+          "default": "sg",
+          "description": "Path to the sigil CLI command."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}

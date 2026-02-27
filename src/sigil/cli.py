@@ -366,7 +366,9 @@ def cmd_move(args):
         print(f"Error: Line number must be >= 1 (got {new_line})", file=sys.stderr)
         sys.exit(1)
 
-    actual_path = root / new_file if not Path(new_file).is_absolute() else Path(new_file)
+    actual_path = (
+        root / new_file if not Path(new_file).is_absolute() else Path(new_file)
+    )
     new_context = extract_context(actual_path, new_line)
 
     old_location = f"{bm.file}:{bm.line}"
