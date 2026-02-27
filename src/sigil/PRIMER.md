@@ -2,13 +2,15 @@
 
 ## What it is
 
-Sigil is a CLI tool for bookmarking code locations with human-written descriptions and tags. Think of it as a curated index of "places that matter" in a codebase, annotated with intent and context that grep and IDE search can't provide.
+Sigil (`sg`) is a CLI tool for bookmarking code locations with human-written descriptions and tags. Think of it as a curated index of "places that matter" in a codebase, annotated with intent and context that grep and IDE search can't provide.
 
-When a `.sigil/` directory is present in a repository, it contains a navigable map of important code locations maintained by the developer.
+When a `.sigil/` directory is present in a repository, it contains a navigable map of important code locations maintained by the developer(s).
 
 ## Why it matters to you
 
 Bookmarks tell you **what the developer cares about and why**. A bookmark isn't just a file and line number — it carries a description explaining significance, tags for categorization, and surrounding code context for orientation. This is higher-signal than reading raw source because someone has already identified these locations as important.
+
+Never edit `.sigil` files directly! Use the `sg` CLI!
 
 ## Storage format
 
@@ -21,6 +23,8 @@ Bookmarks tell you **what the developer cares about and why**. A bookmark isn't 
 
 ### bookmarks.jsonl
 
+Never edit `.sigil` files directly! Use the `sg` CLI!
+
 Each line is a self-contained JSON object:
 
 ```json
@@ -30,6 +34,8 @@ Each line is a self-contained JSON object:
 Fields: `id` (unique), `file` (relative path from repo root), `line` (1-based), `tags` (list), `desc` (human description), `status` (valid|moved|stale|missing_file), `created`, `accessed`, `checked`.
 
 ### Context files (.ctx)
+
+Never edit `.sigil` files directly! Use the `sg` CLI!
 
 Raw source code, no escaping. The target line is marked with `>>> `:
 
@@ -44,19 +50,21 @@ Lines above and below the `>>>` marker are surrounding context for orientation a
 ## CLI commands
 
 ```bash
-sigil init                                    # initialize in current repo
-sigil add <file>:<line> -t tag1,tag2 -d "..." # create bookmark
-sigil list [-t tags] [-f file] [--stale]      # list/filter bookmarks
-sigil list --json                             # JSON output for programmatic use
-sigil show <id>                               # detailed view with context
-sigil delete <id>                             # remove bookmark
-sigil delete -t <tags>                        # bulk remove by tag
-sigil validate                                # check all bookmarks against source
-sigil validate --fix                          # auto-update shifted line numbers
-sigil search <query>                          # search descriptions, tags, files
+sg init                                    # initialize in current repo
+sg add <file>:<line> -t tag1,tag2 -d "..." # create bookmark
+sg list [-t tags] [-f file] [--stale]      # list/filter bookmarks
+sg list --json                             # JSON output for programmatic use
+sg show <id>                               # detailed view with context
+sg delete <id>                             # remove bookmark
+sg delete -t <tags>                        # bulk remove by tag
+sg validate                                # check all bookmarks against source
+sg validate --fix                          # auto-update shifted line numbers
+sg search <query>                          # search descriptions, tags, files
+sg move <id> <target>                      # moves a bookmark using either relative,file local-absolute or absolute references
+
 ```
 
-Partial IDs work for show/delete (e.g. `sigil show a3f5`).
+Partial IDs work for show/delete (e.g. `sg show a3f5`).
 
 ## Validation statuses
 
@@ -69,11 +77,11 @@ Partial IDs work for show/delete (e.g. `sigil show a3f5`).
 
 ### When reading a codebase
 
-Start with `sigil list --json` or read `.sigil/bookmarks.jsonl` directly. This gives you the developer's mental map — the places they've marked as important, buggy, fragile, or worth understanding. Use descriptions and tags to orient yourself before diving into source.
+Start with `sg list --json`. This gives you the developer's mental map — the places they've marked as important, buggy, fragile, or worth understanding. Use descriptions and tags to orient yourself before diving into source.
 
 ### When making changes
 
-After modifying code, run `sigil validate` to see which bookmarks were affected. If you shifted code, `sigil validate --fix` will auto-update line numbers. If you fundamentally changed bookmarked code, update or remove the stale bookmarks.
+After modifying code, run `sg validate` to see which bookmarks were affected. If you shifted code, `sg validate --fix` will auto-update line numbers. If you fundamentally changed bookmarked code, update or remove the stale bookmarks.
 
 ### When creating bookmarks
 
@@ -81,4 +89,6 @@ Write descriptions as if explaining to a colleague why this location matters. In
 
 ### When maintaining bookmarks
 
-After refactoring, run `sigil validate --fix` and review any stale bookmarks. Either update them to point at the new relevant code, or delete them if the concern no longer applies. Bookmark maintenance is a good post-refactor checklist item.
+After refactoring, run `sg validate --fix` and review any stale bookmarks. Either update them to point at the new relevant code, or delete them if the concern no longer applies. Bookmark maintenance is a good post-refactor checklist item.
+
+Remember, stale references are worse than no references.

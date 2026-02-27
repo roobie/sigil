@@ -55,7 +55,7 @@ def ensure_storage(root: Path) -> Path:
 
     bookmarks_path = sigil_dir / BOOKMARKS_FILE
     if not bookmarks_path.exists():
-        bookmarks_path.write_text("")
+        bookmarks_path.write_text("", encoding="utf-8")
 
     return sigil_dir
 
@@ -66,7 +66,7 @@ def load_bookmarks(sigil_dir: Path) -> list[Bookmark]:
     contexts_dir = sigil_dir / CONTEXTS_DIR
 
     bookmarks = []
-    for line in bookmarks_path.read_text().splitlines():
+    for line in bookmarks_path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -85,7 +85,7 @@ def save_bookmarks(sigil_dir: Path, bookmarks: list[Bookmark]) -> None:
     # Write JSONL (atomic-ish)
     lines = [json.dumps(_to_jsonl(bm), separators=(",", ":")) for bm in bookmarks]
     tmp = bookmarks_path.with_suffix(".tmp")
-    tmp.write_text("\n".join(lines) + "\n" if lines else "")
+    tmp.write_text("\n".join(lines) + "\n" if lines else "", encoding="utf-8")
     tmp.replace(bookmarks_path)
 
     # Write context files
@@ -120,7 +120,7 @@ def _save_context(contexts_dir: Path, bookmark_id: str, context: Context) -> Non
     lines.append(f"{CONTEXT_TARGET_MARKER}{context.target}")
     if context.after:
         lines.append(f"    {context.after}")
-    (contexts_dir / f"{bookmark_id}.ctx").write_text("\n".join(lines) + "\n")
+    (contexts_dir / f"{bookmark_id}.ctx").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _load_context(contexts_dir: Path, bookmark_id: str) -> Context:
@@ -133,7 +133,7 @@ def _load_context(contexts_dir: Path, bookmark_id: str) -> Context:
     target = ""
     after = ""
 
-    lines = ctx_path.read_text().splitlines()
+    lines = ctx_path.read_text(encoding="utf-8").splitlines()
     target_idx = None
 
     for i, line in enumerate(lines):

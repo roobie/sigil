@@ -21,7 +21,7 @@ def extract_context(filepath: Path, line_number: int) -> Context:
     if not filepath.exists():
         raise FileNotFoundError(f"File not found: {filepath}")
 
-    lines = filepath.read_text().splitlines()
+    lines = filepath.read_text(encoding="utf-8").splitlines()
 
     if line_number < 1 or line_number > len(lines):
         raise ValueError(
@@ -41,4 +41,4 @@ def read_file_lines(filepath: Path) -> list[str]:
     """Read all lines from a file. Returns empty list if file doesn't exist."""
     if not filepath.exists():
         return []
-    return filepath.read_text().splitlines()
+    return filepath.read_text(encoding="utf-8").splitlines()

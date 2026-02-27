@@ -113,7 +113,7 @@ def main():
 
 def cmd_primer(args):
     script_dir = Path(__file__).resolve().parent
-    with open(script_dir / "PRIMER.md") as f:
+    with open(script_dir / "PRIMER.md", encoding="utf-8") as f:
         primer = f.read()
     print(primer)
 
