@@ -102,11 +102,11 @@ def save_bookmarks(sigil_dir: Path, bookmarks: list[Bookmark]) -> None:
 
 
 def get_relative_path(filepath: Path, root: Path) -> str:
-    """Get path relative to repository root."""
+    """Get path relative to repository root, always using forward slashes."""
     try:
-        return str(filepath.resolve().relative_to(root.resolve()))
+        return filepath.resolve().relative_to(root.resolve()).as_posix()
     except ValueError:
-        return str(filepath.resolve())
+        return filepath.resolve().as_posix()
 
 
 # --- Context file I/O ---
