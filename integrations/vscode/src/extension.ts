@@ -30,11 +30,11 @@ let treeProvider: BookmarkTreeProvider;
 export function activate(ctx: vscode.ExtensionContext) {
   // Gutter decoration types
   gutterValid = vscode.window.createTextEditorDecorationType({
-    gutterIconPath: makeGutterIcon(ctx, "valid"),
+    gutterIconPath: gutterIconUri(ctx, "valid"),
     gutterIconSize: "80%",
   });
   gutterStale = vscode.window.createTextEditorDecorationType({
-    gutterIconPath: makeGutterIcon(ctx, "stale"),
+    gutterIconPath: gutterIconUri(ctx, "stale"),
     gutterIconSize: "80%",
   });
 
@@ -163,23 +163,11 @@ function decorateActive() {
 
 // ── Gutter icon SVGs ──
 
-function makeGutterIcon(
+function gutterIconUri(
   ctx: vscode.ExtensionContext,
   kind: "valid" | "stale"
 ): vscode.Uri {
-  const color = kind === "valid" ? "%23e5c07b" : "%23e06c75";
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">` +
-    `<circle cx="8" cy="8" r="5" fill="${color}"/>` +
-    `</svg>`;
-
-  const iconDir = path.join(ctx.extensionPath, "icons");
-  if (!fs.existsSync(iconDir)) {
-    fs.mkdirSync(iconDir, { recursive: true });
-  }
-  const iconPath = path.join(iconDir, `${kind}.svg`);
-  fs.writeFileSync(iconPath, svg);
-  return vscode.Uri.file(iconPath);
+  return vscode.Uri.file(path.join(ctx.extensionPath, "icons", `${kind}.svg`));
 }
 
 // ── CLI invocation ──
