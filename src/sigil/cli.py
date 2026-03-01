@@ -1,7 +1,10 @@
 """CLI interface for sigil."""
 
 import argparse
+import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from . import __version__
@@ -77,6 +80,10 @@ def main():
         help="New position: +N (relative), -N (relative), N (absolute), or file:line",
     )
 
+    # --- edit ---
+    p_edit = sub.add_parser("edit", help="Edit bookmark metadata in $EDITOR")
+    p_edit.add_argument("id", help="Bookmark ID (or partial match)")
+
     args = parser.parse_args()
 
     sys.stdout.reconfigure(encoding="utf-8")
@@ -98,6 +105,7 @@ def main():
         "validate": cmd_validate,
         "search": cmd_search,
         "move": cmd_move,
+        "edit": cmd_edit,
         "primer": cmd_primer,
     }
 
@@ -384,6 +392,67 @@ def cmd_move(args):
     save_bookmarks(sigil_dir, bookmarks)
     print(f"Moved {bm.short_id}: {old_location} → {new_file}:{new_line}")
     print(f"  Context: {new_context.target.strip()}")
+
+
+def cmd_edit(args):
+    root, sigil_dir, bookmarks = _load()
+    bm = _find_bookmark(bookmarks, args.id)
+
+    editor = os.environ.get("VISUAL") or os.environ.get("EDITOR") or "vi"
+
+    content = (
+        f"# Sigil bookmark: {bm.id}\n"
+        f"# {bm.file}:{bm.line}\n"
+        f"# Lines starting with # are ignored.\n"
+        f"\n"
+        f"tags: {', '.join(bm.metadata.tags)}\n"
+        f"\n"
+        f"desc:\n"
+        f"{bm.metadata.description}\n"
+    )
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".sigil", delete=False, encoding="utf-8"
+    ) as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        subprocess.run([editor, tmp_path], check=True)
+        with open(tmp_path, encoding="utf-8") as f:
+            lines = f.readlines()
+    finally:
+        os.unlink(tmp_path)
+
+    new_desc = bm.metadata.description
+    new_tags = bm.metadata.tags
+
+    in_desc = False
+    desc_lines: list[str] = []
+    for line in lines:
+        stripped = line.rstrip("\n")
+        if stripped.lstrip().startswith("#"):
+            continue
+        if stripped.startswith("tags:"):
+            raw = stripped[len("tags:"):].strip()
+            new_tags = [t.strip() for t in raw.split(",") if t.strip()]
+        elif stripped == "desc:":
+            in_desc = True
+        elif in_desc:
+            desc_lines.append(stripped)
+
+    if in_desc:
+        new_desc = "\n".join(desc_lines).strip()
+
+    if new_desc == bm.metadata.description and new_tags == bm.metadata.tags:
+        print("No changes.")
+        return
+
+    bm.metadata.description = new_desc
+    bm.metadata.tags = new_tags
+    bm.metadata.accessed = now_iso()
+    save_bookmarks(sigil_dir, bookmarks)
+    print(f"Updated bookmark {bm.short_id}")
 
 
 # ---------- Helpers ----------
