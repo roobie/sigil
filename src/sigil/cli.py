@@ -70,7 +70,8 @@ def main():
 
     # --- search ---
     p_search = sub.add_parser("search", help="Search bookmarks")
-    p_search.add_argument("query", help="Search term")
+    p_search.add_argument("query", nargs="+", help="Search terms (all must match); prefix with tag: or file: to scope")
+    p_search.add_argument("-n", "--limit", type=int, default=0, metavar="N", help="Show top N results")
 
     # --- move ---
     p_move = sub.add_parser("move", help="Reposition a bookmark")
@@ -319,26 +320,71 @@ def cmd_validate(args):
 
 def cmd_search(args):
     root, sigil_dir, bookmarks = _load()
-    query = args.query.lower()
 
-    matches = []
+    # Split query into field-scoped and free terms
+    free_terms = []
+    tag_terms = []
+    file_terms = []
+    for token in args.query:
+        t = token.lower()
+        if t.startswith("tag:"):
+            tag_terms.append(t[4:])
+        elif t.startswith("file:"):
+            file_terms.append(t[5:])
+        else:
+            free_terms.append(t)
+
+    # Score weights: desc=4, tags=3, file=2, target line=2, context=1
+    scored = []
     for bm in bookmarks:
-        searchable = " ".join(
-            [
-                bm.metadata.description,
-                " ".join(bm.metadata.tags),
-                bm.file,
-                bm.context.target,
-            ]
-        ).lower()
-        if query in searchable:
-            matches.append(bm)
+        desc = bm.metadata.description.lower()
+        tags_str = " ".join(bm.metadata.tags).lower()
+        file = bm.file.lower()
+        target = bm.context.target.lower()
+        before = bm.context.before.lower()
+        after = bm.context.after.lower()
 
-    if not matches:
-        print(f"No bookmarks matching '{args.query}'.")
+        # Field-scoped filters: all must match (hard filter, not scored)
+        if tag_terms and not all(t in tags_str for t in tag_terms):
+            continue
+        if file_terms and not all(t in file for t in file_terms):
+            continue
+
+        # Free terms: all must appear somewhere (hard AND filter)
+        all_text = f"{desc} {tags_str} {file} {target} {before} {after}"
+        if not all(t in all_text for t in free_terms):
+            continue
+
+        # Score by field weight
+        score = 0
+        for t in free_terms:
+            score += 4 * desc.count(t)
+            score += 3 * tags_str.count(t)
+            score += 2 * file.count(t)
+            score += 2 * target.count(t)
+            score += 1 * before.count(t)
+            score += 1 * after.count(t)
+
+        # Recency tiebreaker: seconds since epoch embedded in ID (bm_TIMESTAMP_hash)
+        try:
+            timestamp = int(bm.id.split("_")[1])
+        except (IndexError, ValueError):
+            timestamp = 0
+
+        scored.append((score, timestamp, bm))
+
+    if not scored:
+        query_str = " ".join(args.query)
+        print(f"No bookmarks matching '{query_str}'.")
         return
 
-    _print_table(matches)
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    results = [bm for _, _, bm in scored]
+    if args.limit:
+        results = results[: args.limit]
+
+    _print_table(results)
 
 
 def cmd_move(args):
