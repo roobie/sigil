@@ -1,0 +1,2 @@
+>>> def find_root(start: Optional[Path] = None) -> Optional[Path]:
+        """Walk up from start directory to find a .sigil/ or .git/ directory."""

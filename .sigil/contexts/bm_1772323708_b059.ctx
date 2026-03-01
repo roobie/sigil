@@ -1,0 +1,3 @@
+    @dataclass
+>>> class Bookmark:
+        id: str

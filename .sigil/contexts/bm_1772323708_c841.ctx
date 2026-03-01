@@ -1,0 +1,2 @@
+>>> def _to_jsonl(bm: Bookmark) -> dict:
+        """Bookmark -> flat dict for one JSONL line."""

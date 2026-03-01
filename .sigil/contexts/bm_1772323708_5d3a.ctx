@@ -1,0 +1,2 @@
+>>> def _find_bookmark(bookmarks: list[Bookmark], partial_id: str) -> Bookmark:
+        """Find a bookmark by full or partial ID match."""

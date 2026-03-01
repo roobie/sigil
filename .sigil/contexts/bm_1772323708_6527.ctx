@@ -1,0 +1,2 @@
+>>> def load_bookmarks(sigil_dir: Path) -> list[Bookmark]:
+        """Load all bookmarks from JSONL + context files."""

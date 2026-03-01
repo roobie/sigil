@@ -1,0 +1,2 @@
+>>> def save_bookmarks(sigil_dir: Path, bookmarks: list[Bookmark]) -> None:
+        """Save all bookmarks to JSONL + context files."""

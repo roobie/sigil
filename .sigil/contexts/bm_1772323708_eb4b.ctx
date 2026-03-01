@@ -1,0 +1,2 @@
+>>> def _load() -> tuple:
+        """Find root, ensure storage, load bookmarks. Returns (root, sigil_dir, bookmarks)."""

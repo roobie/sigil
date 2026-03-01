@@ -1,0 +1,2 @@
+>>> export function activate(ctx: vscode.ExtensionContext) {
+      // Gutter decoration types

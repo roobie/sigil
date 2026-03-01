@@ -1,0 +1,2 @@
+>>> def apply_result(result: ValidationResult, fix: bool = False) -> bool:
+        """Apply a validation result to the bookmark. Returns True if bookmark was modified."""

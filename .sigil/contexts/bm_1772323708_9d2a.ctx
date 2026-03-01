@@ -1,0 +1,2 @@
+>>> def validate_bookmark(bookmark: Bookmark, root: Path) -> ValidationResult:
+        """Validate a single bookmark against its source file.

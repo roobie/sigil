@@ -1,0 +1,2 @@
+>>> def _context_matches(lines: list[str], idx: int, bookmark: Bookmark) -> bool:
+        """Check if surrounding context matches the bookmark's stored context."""
