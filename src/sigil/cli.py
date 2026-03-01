@@ -23,7 +23,22 @@ from .validate import validate_bookmark, apply_result
 def main():
     parser = argparse.ArgumentParser(
         prog="sigil",
-        description="Bookmark code locations with context-aware validation. Invoke `sg primer` for a crash course in how to use.",
+        description=(
+            "Bookmark code locations with context-aware validation. "
+            "Invoke `sg primer` for a crash course in how to use this tool."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  sg init                                Initialize sigil in this repo\n"
+            "  sg add src/main.py:42 -t bug,perf -d \"check this loop\"\n"
+            "  sg list --json                          Output all bookmarks as JSON\n"
+            "  sg list -t cli,feature                  Show bookmarks with those tags\n"
+            "  sg show bm_123456                       Show full details for a bookmark\n"
+            "  sg show bm_123456 --json               Show bookmark as JSON (machine-readable)\n"
+            "  sg search file:src tag:cli handler      Search bookmarks scoped to file and tag\n"
+            "  sg validate --fix                       Validate and optionally fix line numbers\n"
+        ),
     )
     parser.add_argument("--version", action="version", version=f"sigil {__version__}")
 
@@ -32,20 +47,40 @@ def main():
     # --- primer ---
     sub.add_parser(
         "primer",
-        help="Prints the PRIMER.md (do this as part of discovery on how to use this tool)",
+        help=(
+            "Prints the PRIMER.md (do this as part of discovery on how to use this tool). "
+            "Run this first when onboarding to a repository that uses sigil."
+        ),
     )
 
     # --- init ---
-    sub.add_parser("init", help="Initialize sigil in current directory")
+    sub.add_parser(
+        "init",
+        help=(
+            "Initialize sigil in current directory. Creates a .sigil/ directory and starter files."
+        ),
+    )
 
     # --- add ---
-    p_add = sub.add_parser("add", help="Add a bookmark")
+    p_add = sub.add_parser(
+        "add",
+        help=(
+            "Add a bookmark. Location must be file:line (example: src/main.py:42). "
+            "Use -t/--tags to attach comma-separated tags and -d/--desc for a short description."
+        ),
+    )
     p_add.add_argument("location", help="file:line (e.g. src/main.py:42)")
     p_add.add_argument("-t", "--tags", help="Comma-separated tags")
     p_add.add_argument("-d", "--desc", default="", help="Description")
 
     # --- list ---
-    p_list = sub.add_parser("list", aliases=["ls"], help="List bookmarks")
+    p_list = sub.add_parser(
+        "list",
+        aliases=["ls"],
+        help=(
+            "List bookmarks. By default prints a human-friendly table. Use --json to output machine-readable JSON."
+        ),
+    )
     p_list.add_argument("-t", "--tags", help="Filter by tags (comma-separated)")
     p_list.add_argument("-f", "--file", help="Filter by file pattern")
     p_list.add_argument(
@@ -56,25 +91,65 @@ def main():
     )
 
     # --- show ---
-    p_show = sub.add_parser("show", help="Show bookmark details")
+    p_show = sub.add_parser(
+        "show",
+        help=(
+            "Show bookmark details. Specify the full or partial bookmark ID. "
+            "With --json outputs a structured JSON object (useful for scripts)."
+        ),
+    )
     p_show.add_argument("id", help="Bookmark ID (or partial match)")
+    p_show.add_argument(
+        "--json", action="store_true", dest="as_json", help="Output this bookmark as JSON"
+    )
 
     # --- delete ---
-    p_del = sub.add_parser("delete", aliases=["rm"], help="Delete bookmark(s)")
+    p_del = sub.add_parser(
+        "delete",
+        aliases=["rm"],
+        help=(
+            "Delete a bookmark by ID or remove all bookmarks that match --tags. "
+            "Be careful: deletions are immediate."
+        ),
+    )
     p_del.add_argument("id", nargs="?", help="Bookmark ID (or partial match)")
     p_del.add_argument("-t", "--tags", help="Delete all with these tags")
 
     # --- validate ---
-    p_val = sub.add_parser("validate", help="Validate all bookmarks")
+    p_val = sub.add_parser(
+        "validate",
+        help=(
+            "Validate all bookmarks against their source files. Reports status per bookmark. "
+            "Use --fix to automatically update line numbers when a target has moved. Use --json for a machine-readable report."
+        ),
+    )
     p_val.add_argument("--fix", action="store_true", help="Auto-fix line numbers")
+    p_val.add_argument(
+        "--json", action="store_true", dest="as_json", help="Output validation results as JSON"
+    )
 
     # --- search ---
-    p_search = sub.add_parser("search", help="Search bookmarks")
+    p_search = sub.add_parser(
+        "search",
+        help=(
+            "Search bookmarks. Supply one or more search terms; all must match. "
+            "Prefix a term with tag: or file: to scope the search. Use --json to emit results as JSON."
+        ),
+    )
     p_search.add_argument("query", nargs="+", help="Search terms (all must match); prefix with tag: or file: to scope")
     p_search.add_argument("-n", "--limit", type=int, default=0, metavar="N", help="Show top N results")
+    p_search.add_argument(
+        "--json", action="store_true", dest="as_json", help="Output search results as JSON"
+    )
 
     # --- move ---
-    p_move = sub.add_parser("move", help="Reposition a bookmark")
+    p_move = sub.add_parser(
+        "move",
+        help=(
+            "Reposition a bookmark within the list or move it to a new file/line. "
+            "Target formats: +N, -N (relative), N (absolute line), or file:line."
+        ),
+    )
     p_move.add_argument("id", help="Bookmark ID (or partial match)")
     p_move.add_argument(
         "target",
@@ -82,7 +157,13 @@ def main():
     )
 
     # --- edit ---
-    p_edit = sub.add_parser("edit", help="Edit bookmark metadata in $EDITOR")
+    p_edit = sub.add_parser(
+        "edit",
+        help=(
+            "Edit bookmark metadata in $EDITOR. Opens a temp file where you can update tags and description. "
+            "Lines starting with # are ignored. Save and close to apply changes."
+        ),
+    )
     p_edit.add_argument("id", help="Bookmark ID (or partial match)")
 
     args = parser.parse_args()
@@ -231,6 +312,12 @@ def cmd_show(args):
     bm.metadata.accessed = now_iso()
     save_bookmarks(sigil_dir, bookmarks)
 
+    if getattr(args, "as_json", False):
+        import json
+
+        print(json.dumps(bm.to_dict(), indent=2))
+        return
+
     print(f"Bookmark: {bm.id}")
     print(f"File: {bm.file}:{bm.line}")
     print(f"Tags: {', '.join(bm.metadata.tags) if bm.metadata.tags else '(none)'}")
@@ -287,6 +374,23 @@ def cmd_validate(args):
         results.append(result)
 
     save_bookmarks(sigil_dir, bookmarks)
+
+    if getattr(args, "as_json", False):
+        import json
+
+        serial = []
+        for r in results:
+            serial.append(
+                {
+                    "bookmark": r.bookmark.to_dict(),
+                    "old_status": r.old_status,
+                    "new_status": r.new_status,
+                    "new_line": r.new_line,
+                    "message": r.message,
+                }
+            )
+        print(json.dumps(serial, indent=2))
+        return
 
     # Summary
     by_status = {}
@@ -383,6 +487,12 @@ def cmd_search(args):
     results = [bm for _, _, bm in scored]
     if args.limit:
         results = results[: args.limit]
+
+    if getattr(args, "as_json", False):
+        import json
+
+        print(json.dumps([b.to_dict() for b in results], indent=2))
+        return
 
     _print_table(results)
 

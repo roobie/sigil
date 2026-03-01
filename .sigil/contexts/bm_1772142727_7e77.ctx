@@ -1,2 +1,0 @@
-        # --- init ---
->>>     sub.add_parser("init", help="Initialize sigil in current directory")
