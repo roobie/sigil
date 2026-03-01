@@ -59,12 +59,26 @@ sg delete <id>                             # remove bookmark
 sg delete -t <tags>                        # bulk remove by tag
 sg validate                                # check all bookmarks against source
 sg validate --fix                          # auto-update shifted line numbers
-sg search <query>                          # search descriptions, tags, files
+sg search <terms...>                       # ranked search; all terms must match
+sg search tag:<t> file:<f> <term>         # field-scoped search (tag:, file: prefixes)
+sg search <terms...> -n 10                # show top N results only
+sg edit <id>                               # open bookmark metadata in $EDITOR (desc + tags)
 sg move <id> <target>                      # moves a bookmark using either relative,file local-absolute or absolute references
 
 ```
 
-Partial IDs work for show/delete (e.g. `sg show a3f5`).
+Partial IDs work for show/delete/edit (e.g. `sg show a3f5`).
+
+## Search ranking
+
+`sg search` accepts multiple terms — all must match (AND). Results are ranked by relevance:
+
+- **4×** match in description
+- **3×** match in tags
+- **2×** match in file path or target line
+- **1×** match in surrounding context lines
+
+Field-scoped prefixes (`tag:foo`, `file:bar`) act as hard filters before scoring. Ties broken by recency.
 
 ## Validation statuses
 
