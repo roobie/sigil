@@ -99,7 +99,7 @@ Some good options: `filled-rectangle', `large-circle', `right-arrow'."
 ;; --- JSONL parsing ---
 
 (defun sigil--parse-jsonl (file)
-  "Parse a JSONL file into a list of alists."
+  "Parse a JSONL FILE into a list of alists."
   (when (file-exists-p file)
     (let ((lines (split-string (with-temp-buffer
                                  (insert-file-contents file)
