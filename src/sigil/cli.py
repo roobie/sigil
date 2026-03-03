@@ -89,6 +89,9 @@ def main():
     p_list.add_argument(
         "--json", action="store_true", dest="as_json", help="Output as JSON"
     )
+    p_list.add_argument(
+        "--long", action="store_true", dest="as_long", help="Long definition-list style output"
+    )
 
     # --- show ---
     p_show = sub.add_parser(
@@ -298,6 +301,10 @@ def cmd_list(args):
         import json
 
         print(json.dumps([b.to_dict() for b in bookmarks], indent=2))
+        return
+
+    if getattr(args, "as_long", False):
+        _print_long(bookmarks)
         return
 
     # Table output
@@ -683,6 +690,49 @@ def _print_table(bookmarks: list[Bookmark]):
             for i, val in enumerate(row)
         )
         print(fmt.format(*truncated))
+
+
+def _print_long(bookmarks: list[Bookmark]):
+    """Print bookmarks in a compact definition-list style.
+
+    Format per bookmark:
+      <short-id>  <file>:<line>
+              [tag1,tag2] Description first line
+              → <anchor line>
+
+    This avoids table alignment and truncation; descriptions are
+    printed full (multiline preserved and indented).
+    """
+    indent = " " * 8
+    for bm in bookmarks:
+        tags = ",".join(bm.metadata.tags) if bm.metadata.tags else ""
+        tag_display = f"[{tags}]" if tags else ""
+        desc = bm.metadata.description or ""
+        desc_lines = desc.splitlines() or [""]
+
+        # Header: id and location
+        print(f"{bm.short_id}  {bm.file}:{bm.line}")
+
+        # Description with optional tags on the first line
+        if desc_lines:
+            first = desc_lines[0]
+            if tag_display:
+                print(f"{indent}{tag_display} {first}")
+            else:
+                print(f"{indent}{first}")
+            for line in desc_lines[1:]:
+                print(f"{indent}  {line}")
+        else:
+            if tag_display:
+                print(f"{indent}{tag_display}")
+
+        # Anchor (show only the first line of the target context)
+        target = (bm.context.target or "").splitlines()[0].strip()
+        if target:
+            print(f"{indent}→ {target}")
+
+        # Blank line between entries for readability
+        print()
 
 
 if __name__ == "__main__":
