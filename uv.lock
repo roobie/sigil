@@ -258,7 +258,7 @@ wheels = [
 
 [[package]]
 name = "sigil"
-version = "0.4.2"
+version = "0.4.4"
 source = { editable = "." }
 
 [package.dev-dependencies]

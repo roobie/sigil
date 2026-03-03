@@ -696,14 +696,14 @@ def _print_long(bookmarks: list[Bookmark]):
     """Print bookmarks in a compact definition-list style.
 
     Format per bookmark:
-      <short-id>  <file>:<line>
-              [tag1,tag2] Description first line
-              → <anchor line>
+    |  <short-id>  <file>:<line>
+    |    [tag1,tag2] Description first line
+    |    → <anchor line>
 
     This avoids table alignment and truncation; descriptions are
     printed full (multiline preserved and indented).
     """
-    indent = " " * 8
+    indent = " " * 2
     for bm in bookmarks:
         tags = ",".join(bm.metadata.tags) if bm.metadata.tags else ""
         tag_display = f"[{tags}]" if tags else ""
