@@ -23,8 +23,8 @@ def test_print_long_basic(capsys):
 
     expected = (
         "abcdefgh  server/scanner/orchestrator.ts:17\n"
-        "        [scanner,core] runScan orchestrator — entry point for the scan pipeline\n"
-        "        → export async function runScan(store: Store): Promise<void> {\n\n"
+        "\t[scanner,core] runScan orchestrator — entry point for the scan pipeline\n"
+        "\t→ export async function runScan(store: Store): Promise<void> {\n\n"
     )
 
     assert captured == expected
@@ -46,10 +46,10 @@ def test_print_long_multiline_description(capsys):
 
     expected = (
         "ijklmnop  prisma/schema.prisma:4\n"
-        "        [database] First line of description\n"
-        "          Second line with more detail\n"
-        "          Third line\n"
-        "        → generator client {\n\n"
+        "\t[database] First line of description\n"
+        "\t  Second line with more detail\n"
+        "\t  Third line\n"
+        "\t→ generator client {\n\n"
     )
 
     assert captured == expected

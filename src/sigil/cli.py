@@ -128,6 +128,13 @@ def main():
     )
     p_val.add_argument("--fix", action="store_true", help="Auto-fix line numbers")
     p_val.add_argument(
+        "--unsafe", action="store_true",
+        help=(
+            "When used with --fix, perform unsafe fixes such as trimming duplicate bookmarks. "
+            "This will delete bookmark entries and cannot be undone."
+        ),
+    )
+    p_val.add_argument(
         "--json", action="store_true", dest="as_json", help="Output validation results as JSON"
     )
 
@@ -372,6 +379,18 @@ def cmd_validate(args):
 
     if not bookmarks:
         print("No bookmarks to validate.")
+        return
+
+    # Unsafe dedupe mode: when both --fix and --unsafe are supplied, just trim duplicates.
+    if getattr(args, "fix", False) and getattr(args, "unsafe", False):
+        new_bookmarks, removed = _trim_duplicates(bookmarks)
+        if not removed:
+            print("No duplicate bookmarks found.")
+            return
+        save_bookmarks(sigil_dir, new_bookmarks)
+        print(f"Removed {len(removed)} duplicate bookmark(s):")
+        for bm in removed:
+            print(f"  {bm.short_id} → {bm.file}:{bm.line}")
         return
 
     results = []
@@ -703,7 +722,7 @@ def _print_long(bookmarks: list[Bookmark]):
     This avoids table alignment and truncation; descriptions are
     printed full (multiline preserved and indented).
     """
-    indent = " " * 2
+    indent = "\t"
     for bm in bookmarks:
         tags = ",".join(bm.metadata.tags) if bm.metadata.tags else ""
         tag_display = f"[{tags}]" if tags else ""
@@ -733,6 +752,35 @@ def _print_long(bookmarks: list[Bookmark]):
 
         # Blank line between entries for readability
         print()
+
+
+# ---------- Duplicate trimming (unsafe) ----------
+
+def _trim_duplicates(bookmarks: list[Bookmark]) -> tuple[list[Bookmark], list[Bookmark]]:
+    """Trim duplicate bookmarks.
+
+    Duplicates are considered bookmarks with the same (file, context.target).
+    The function keeps the newest / bottom-most occurrence and removes earlier ones.
+
+    Returns (new_bookmarks, removed_bookmarks).
+    """
+    seen: set[tuple[str, str]] = set()
+    new_rev: list[Bookmark] = []
+    removed_rev: list[Bookmark] = []
+
+    # Iterate from bottom to top so the first occurrence we see is the newest
+    for bm in reversed(bookmarks):
+        key = (bm.file, (bm.context.target or "").strip())
+        if key in seen:
+            removed_rev.append(bm)
+        else:
+            seen.add(key)
+            new_rev.append(bm)
+
+    # Reconstruct original order (top -> bottom) for kept bookmarks
+    new_bookmarks = list(reversed(new_rev))
+    removed_bookmarks = list(reversed(removed_rev))
+    return new_bookmarks, removed_bookmarks
 
 
 if __name__ == "__main__":
