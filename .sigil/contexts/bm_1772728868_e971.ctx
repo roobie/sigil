@@ -1,0 +1,3 @@
+        # Unsafe dedupe mode: when both --fix and --unsafe are supplied, just trim duplicates.
+>>>     if getattr(args, "fix", False) and getattr(args, "unsafe", False):
+            new_bookmarks, removed = _trim_duplicates(bookmarks)
