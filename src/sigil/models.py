@@ -93,4 +93,6 @@ def generate_id() -> str:
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    # Use microsecond precision to avoid flaky equality when times are recorded
+    # in quick succession (tests and CLI updates).
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")

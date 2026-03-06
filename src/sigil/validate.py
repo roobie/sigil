@@ -59,8 +59,17 @@ def validate_bookmark(bookmark: Bookmark, root: Path) -> ValidationResult:
             message="Exact match at original line",
         )
 
-    # 2. Nearby search (±10 lines)
-    search_radius = 10
+    # Pre-compute all matches in the file. This allows nearby logic to be
+    # conservative when multiple matches exist (avoid false positives with no
+    # context provided).
+    matches = [i for i, line in enumerate(lines) if line == target]
+
+    # 2. Nearby search (±1 line). Nearby matches are treated as still 'valid' —
+    # they usually indicate a small shift (e.g. an inserted line) that keeps the
+    # bookmarked code intact. Larger shifts (>1 line) are reported as 'moved'.
+    # However, if there are multiple matches in the file and the bookmark has no
+    # surrounding context, we avoid treating a nearby hit as a definitive match.
+    search_radius = 1
     start = max(0, idx - search_radius)
     end = min(len(lines), idx + search_radius + 1)
 
@@ -68,6 +77,10 @@ def validate_bookmark(bookmark: Bookmark, root: Path) -> ValidationResult:
         if lines[i] == target:
             # Bonus: check surrounding context too
             if _context_matches(lines, i, bookmark):
+                # If no context was provided and there are multiple identical
+                # targets in the file, treat as ambiguous and continue scanning.
+                if not (bookmark.context.before or bookmark.context.after) and len(matches) > 1:
+                    continue
                 return ValidationResult(
                     bookmark=bookmark,
                     old_status=old_status,
@@ -76,9 +89,7 @@ def validate_bookmark(bookmark: Bookmark, root: Path) -> ValidationResult:
                     message=f"Found nearby (moved from line {bookmark.line} to {i + 1})",
                 )
 
-    # 3. File-wide search
-    matches = [i for i, line in enumerate(lines) if line == target]
-
+    # 3. File-wide search using precomputed matches
     if len(matches) == 1:
         new_line = matches[0] + 1
         return ValidationResult(
@@ -137,7 +148,13 @@ def apply_result(result: ValidationResult, fix: bool = False) -> bool:
 
 
 def _context_matches(lines: list[str], idx: int, bookmark: Bookmark) -> bool:
-    """Check if surrounding context matches the bookmark's stored context."""
+    """Check if surrounding context matches the bookmark's stored context.
+
+    Notes:
+    - Requires at least one of before/after to be present to consider this a
+      meaningful match. When no context is recorded, callers should not treat
+      this as a positive disambiguation signal.
+    """
     matches = 0
     total = 0
 
@@ -151,5 +168,5 @@ def _context_matches(lines: list[str], idx: int, bookmark: Bookmark) -> bool:
         if idx < len(lines) - 1 and lines[idx + 1] == bookmark.context.after:
             matches += 1
 
-    # If we have context to compare, require at least one match
-    return total == 0 or matches > 0
+    # Only return True if there was context to compare and at least one side matched
+    return total > 0 and matches > 0
