@@ -1,0 +1,2 @@
+>>> def test_cmd_primer_and_init(tmp_path, capsys):
+        # cmd_primer should print the bundled PRIMER.md

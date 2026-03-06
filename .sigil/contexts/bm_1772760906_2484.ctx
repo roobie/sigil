@@ -1,0 +1,2 @@
+>>> def cmd_move(args):
+        root, sigil_dir, bookmarks = _load()

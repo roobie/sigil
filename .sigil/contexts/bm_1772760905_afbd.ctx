@@ -1,0 +1,2 @@
+>>> def test_cmd_add_show_delete_move_edit_list(tmp_path, capsys, monkeypatch):
+        cwd = os.getcwd()
