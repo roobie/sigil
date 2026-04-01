@@ -1,6 +1,6 @@
 [project]
 name = "sigil"
-version = "0.4.8"
+version = "0.4.9"
 readme = "README.md"
 description = "Bookmark code locations with context-aware validation"
 requires-python = ">=3.10"
@@ -8,6 +8,7 @@ dependencies = []
 
 [project.scripts]
 sg = "sigil.cli:main"
+sigil = "sigil.cli:main"
 
 [build-system]
 requires = ["hatchling"]
