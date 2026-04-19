@@ -155,7 +155,12 @@ def _load_context(contexts_dir: Path, bookmark_id: str) -> Context:
 
 
 def _to_jsonl(bm: Bookmark) -> dict:
-    """Bookmark -> flat dict for one JSONL line."""
+    """Bookmark -> flat dict for one JSONL line.
+
+    Note: `last_checked` is deliberately NOT persisted. It is runtime-only
+    diagnostic metadata populated by `validate`. Persisting it caused every
+    commit to rewrite 30 lines of timestamp churn (see commit 58a3cf2).
+    """
     return {
         "id": bm.id,
         "file": bm.file,
@@ -165,12 +170,16 @@ def _to_jsonl(bm: Bookmark) -> dict:
         "status": bm.validation.status,
         "created": bm.metadata.created,
         "accessed": bm.metadata.accessed,
-        "checked": bm.validation.last_checked,
     }
 
 
 def _from_jsonl(data: dict, context: Context) -> Bookmark:
-    """JSONL dict + Context -> Bookmark."""
+    """JSONL dict + Context -> Bookmark.
+
+    `last_checked` is not persisted (see _to_jsonl). Tolerates legacy
+    "checked" keys from pre-0.5.1 stores by reading if present, empty
+    otherwise — on next save the field drops out of the file.
+    """
     return Bookmark(
         id=data["id"],
         file=data["file"],
