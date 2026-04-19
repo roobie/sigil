@@ -18,6 +18,7 @@ from .storage import (
     get_relative_path,
 )
 from .validate import validate_bookmark, apply_result
+from . import eventlog
 
 
 def main():
@@ -176,6 +177,21 @@ def main():
     )
     p_edit.add_argument("id", help="Bookmark ID (or partial match)")
 
+    # --- stats ---
+    p_stats = sub.add_parser(
+        "stats",
+        help=(
+            "Report usage stats from the local event log "
+            "($XDG_STATE_HOME/sigil/events.jsonl). Use --since DAYS to scope."
+        ),
+    )
+    p_stats.add_argument(
+        "--since", type=int, default=None, help="Only include events from last N days"
+    )
+    p_stats.add_argument(
+        "--json", action="store_true", dest="as_json", help="Emit JSON summary"
+    )
+
     args = parser.parse_args()
 
     sys.stdout.reconfigure(encoding="utf-8")
@@ -199,15 +215,42 @@ def main():
         "move": cmd_move,
         "edit": cmd_edit,
         "primer": cmd_primer,
+        "stats": cmd_stats,
     }
 
     fn = commands.get(args.command)
-    if fn:
+    if not fn:
+        return
+
+    # Log every dispatched invocation (stats calls log themselves too — fine,
+    # they're cheap). Exit code captured; telemetry failure never crashes CLI.
+    exit_code = 0
+    with eventlog.Timer() as timer:
         try:
             fn(args)
         except (FileNotFoundError, ValueError) as e:
             print(f"Error: {e}", file=sys.stderr)
-            sys.exit(1)
+            exit_code = 1
+        except SystemExit as e:
+            exit_code = int(e.code) if isinstance(e.code, int) else 1
+            raise
+        finally:
+            # Best-effort repo root (some commands run outside a sigil project)
+            try:
+                from .storage import find_root as _fr
+                repo_root = _fr()
+            except Exception:
+                repo_root = None
+            eventlog.write_event(
+                cmd=args.command,
+                exit_code=exit_code,
+                dur_ms=timer.ms,
+                argv=sys.argv,
+                repo_root=repo_root,
+                extras=eventlog._consume_extras(),
+            )
+    if exit_code:
+        sys.exit(exit_code)
 
 
 # ---------- Commands ----------
@@ -274,6 +317,8 @@ def cmd_add(args):
 
     bookmarks.append(bookmark)
     save_bookmarks(sigil_dir, bookmarks)
+    eventlog.add_extra("bookmarks_total", len(bookmarks))
+    eventlog.add_extra("bookmarks_affected", 1)
 
     print(f"Added bookmark {bookmark.short_id} → {rel_path}:{line}")
     if tags:
@@ -400,6 +445,20 @@ def cmd_validate(args):
         results.append(result)
 
     save_bookmarks(sigil_dir, bookmarks)
+
+    # Telemetry: count by status; always emit 0s for missing keys (consistency
+    # so `sigil stats` can sum columns without null-handling).
+    _counts = {"valid": 0, "moved": 0, "stale": 0, "missing_file": 0}
+    for r in results:
+        _counts[r.new_status] = _counts.get(r.new_status, 0) + 1
+    _fixed_n = sum(
+        1 for r in results if r.new_line and r.new_line != r.bookmark.line
+    ) if getattr(args, "fix", False) else 0
+    eventlog.add_extra("bookmarks_total", len(bookmarks))
+    eventlog.add_extra("moved", _counts["moved"])
+    eventlog.add_extra("stale", _counts["stale"])
+    eventlog.add_extra("missing_file", _counts["missing_file"])
+    eventlog.add_extra("fixed", _fixed_n)
 
     if getattr(args, "as_json", False):
         import json
@@ -781,6 +840,61 @@ def _trim_duplicates(bookmarks: list[Bookmark]) -> tuple[list[Bookmark], list[Bo
     new_bookmarks = list(reversed(new_rev))
     removed_bookmarks = list(reversed(removed_rev))
     return new_bookmarks, removed_bookmarks
+
+
+def cmd_stats(args):
+    """Summarize the local event log. Reads $XDG_STATE_HOME/sigil/events.jsonl."""
+    events = eventlog.read_events(since_days=args.since)
+    # Aggregate
+    by_cmd: dict[str, int] = {}
+    by_cmd_source: dict[tuple[str, str], int] = {}
+    by_repo: dict[str, int] = {}
+    inject_bytes = 0
+    inject_count = 0
+    fixed_total = 0
+    moved_total = 0
+    for e in events:
+        cmd = e.get("cmd", "?")
+        src = e.get("source", "user")
+        by_cmd[cmd] = by_cmd.get(cmd, 0) + 1
+        by_cmd_source[(cmd, src)] = by_cmd_source.get((cmd, src), 0) + 1
+        repo = e.get("repo", "-")
+        by_repo[repo] = by_repo.get(repo, 0) + 1
+        if e.get("kind") == "hook-inject":
+            inject_count += 1
+            inject_bytes += int(e.get("bytes", 0) or 0)
+        fixed_total += int(e.get("fixed", 0) or 0)
+        moved_total += int(e.get("moved", 0) or 0)
+
+    if args.as_json:
+        import json as _json
+
+        out = {
+            "total_events": len(events),
+            "since_days": args.since,
+            "by_cmd": by_cmd,
+            "by_cmd_source": {f"{c}:{s}": n for (c, s), n in by_cmd_source.items()},
+            "by_repo": by_repo,
+            "hook_inject": {"count": inject_count, "bytes": inject_bytes},
+            "validate_totals": {"moved": moved_total, "fixed": fixed_total},
+            "log_path": str(eventlog.log_path()),
+        }
+        print(_json.dumps(out, indent=2))
+        return
+
+    scope = f" (last {args.since}d)" if args.since else ""
+    print(f"Sigil stats{scope} — {len(events)} event(s)")
+    print(f"Log: {eventlog.log_path()}\n")
+    print("By subcommand:")
+    for cmd, n in sorted(by_cmd.items(), key=lambda kv: -kv[1]):
+        user_n = by_cmd_source.get((cmd, "user"), 0)
+        hook_n = by_cmd_source.get((cmd, "hook"), 0)
+        print(f"  {cmd:<12} {n:>5}   (user={user_n}, hook={hook_n})")
+    print("\nBy repo:")
+    for repo, n in sorted(by_repo.items(), key=lambda kv: -kv[1])[:10]:
+        print(f"  {repo:<20} {n:>5}")
+    print(f"\nHook injections: {inject_count} ({inject_bytes} bytes)")
+    print(f"Drift healed:    moved={moved_total}, fixed={fixed_total}")
 
 
 if __name__ == "__main__":
