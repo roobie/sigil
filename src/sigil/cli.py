@@ -192,6 +192,33 @@ def main():
         "--json", action="store_true", dest="as_json", help="Emit JSON summary"
     )
 
+    # --- adr-check ---
+    p_adr = sub.add_parser(
+        "adr-check",
+        help=(
+            "Pre-commit check: ensure staged ADRs own a bookmark or opt out "
+            "via `code_anchors:` frontmatter. Exit 1 on missing linkage; "
+            "SIGIL_SKIP=1 bypasses."
+        ),
+    )
+    p_adr.add_argument(
+        "--glob",
+        default="docs/decisions/*.md",
+        help="Glob for ADR files (default: docs/decisions/*.md)",
+    )
+
+    # --- install-hooks ---
+    p_hooks = sub.add_parser(
+        "install-hooks",
+        help=(
+            "Install the sigil pre-commit hook (.git/hooks/pre-commit). "
+            "Idempotent — re-running is safe. Use --uninstall to remove."
+        ),
+    )
+    p_hooks.add_argument(
+        "--uninstall", action="store_true", help="Remove the sigil managed block"
+    )
+
     args = parser.parse_args()
 
     sys.stdout.reconfigure(encoding="utf-8")
@@ -216,6 +243,8 @@ def main():
         "edit": cmd_edit,
         "primer": cmd_primer,
         "stats": cmd_stats,
+        "adr-check": cmd_adr_check,
+        "install-hooks": cmd_install_hooks,
     }
 
     fn = commands.get(args.command)
@@ -895,6 +924,37 @@ def cmd_stats(args):
         print(f"  {repo:<20} {n:>5}")
     print(f"\nHook injections: {inject_count} ({inject_bytes} bytes)")
     print(f"Drift healed:    moved={moved_total}, fixed={fixed_total}")
+
+
+def cmd_adr_check(args):
+    """Pre-commit check: ADR ↔ bookmark linkage. See src/sigil/adr_check.py."""
+    from . import adr_check
+
+    rc = adr_check.run(glob=args.glob)
+    # adr_check.run() uses its own stdout/stderr discipline; propagate exit.
+    if rc != 0:
+        sys.exit(rc)
+
+
+def cmd_install_hooks(args):
+    """Install or remove the sigil pre-commit hook."""
+    from . import hook_install
+
+    root = find_root()
+    if root is None:
+        print("Error: not inside a git repo or sigil project.", file=sys.stderr)
+        sys.exit(1)
+
+    if args.uninstall:
+        path, action = hook_install.uninstall(root)
+        print(f"sigil install-hooks: {action} {path}")
+        return
+
+    path, action = hook_install.install(root)
+    print(f"sigil install-hooks: {action} {path}")
+    if action in ("created", "updated"):
+        print("  Installed: sigil validate --fix + sigil adr-check")
+        print("  Bypass once: SIGIL_SKIP=1 git commit ...")
 
 
 if __name__ == "__main__":
