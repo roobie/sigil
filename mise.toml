@@ -1,0 +1,3 @@
+
+[tasks.install]
+run = "uv tool install --reinstall --editable ."
